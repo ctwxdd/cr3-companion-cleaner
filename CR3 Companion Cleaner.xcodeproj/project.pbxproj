@@ -1,0 +1,218 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A00000000000000000000101 /* CR3CompanionCleanerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000201 /* CR3CompanionCleanerApp.swift */; };
+		A00000000000000000000102 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000202 /* ContentView.swift */; };
+		A00000000000000000000103 /* CleanerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000203 /* CleanerViewModel.swift */; };
+		A00000000000000000000104 /* PhotoScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000204 /* PhotoScanner.swift */; };
+		A00000000000000000000105 /* CleanupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000205 /* CleanupService.swift */; };
+		A00000000000000000000106 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000206 /* Models.swift */; };
+		A00000000000000000000107 /* PhotoScannerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000207 /* PhotoScannerTests.swift */; };
+		A00000000000000000000108 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000212 /* Assets.xcassets */; };
+		A00000000000000000000109 /* BlurDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000213 /* BlurDetection.swift */; };
+		A00000000000000000000110 /* BlurDetector.mlmodelc in Resources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000214 /* BlurDetector.mlmodelc */; };
+		A00000000000000000000111 /* MagikaDocumentFromPixel-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000215 /* MagikaDocumentFromPixel-LICENSE.txt */; };
+		A00000000000000000000112 /* WebRemoteServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000216 /* WebRemoteServer.swift */; };
+		A00000000000000000000113 /* BackupCheckService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000217 /* BackupCheckService.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		A00000000000000000000601 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A00000000000000000000801 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A00000000000000000000701;
+			remoteInfo = "CR3 Companion Cleaner";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		A00000000000000000000201 /* CR3CompanionCleanerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CR3CompanionCleanerApp.swift; sourceTree = "<group>"; };
+		A00000000000000000000202 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		A00000000000000000000203 /* CleanerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleanerViewModel.swift; sourceTree = "<group>"; };
+		A00000000000000000000204 /* PhotoScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoScanner.swift; sourceTree = "<group>"; };
+		A00000000000000000000205 /* CleanupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleanupService.swift; sourceTree = "<group>"; };
+		A00000000000000000000206 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		A00000000000000000000207 /* PhotoScannerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoScannerTests.swift; sourceTree = "<group>"; };
+		A00000000000000000000208 /* CR3 Companion Cleaner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "CR3 Companion Cleaner.entitlements"; sourceTree = "<group>"; };
+		A00000000000000000000209 /* CR3 Companion Cleaner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CR3 Companion Cleaner.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A00000000000000000000210 /* CR3 Companion CleanerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "CR3 Companion CleanerTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A00000000000000000000211 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		A00000000000000000000212 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A00000000000000000000213 /* BlurDetection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlurDetection.swift; sourceTree = "<group>"; };
+		A00000000000000000000214 /* BlurDetector.mlmodelc */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Resources/BlurDetector.mlmodelc; sourceTree = "<group>"; };
+		A00000000000000000000215 /* MagikaDocumentFromPixel-LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Models/MagikaDocumentFromPixel-LICENSE.txt; sourceTree = "<group>"; };
+		A00000000000000000000216 /* WebRemoteServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebRemoteServer.swift; sourceTree = "<group>"; };
+		A00000000000000000000217 /* BackupCheckService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupCheckService.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A00000000000000000000401 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		A00000000000000000000402 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A00000000000000000000301 = {
+			isa = PBXGroup;
+			children = (
+				A00000000000000000000302 /* CR3 Companion Cleaner */,
+				A00000000000000000000303 /* CR3 Companion CleanerTests */,
+				A00000000000000000000211 /* README.md */,
+				A00000000000000000000304 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A00000000000000000000302 /* CR3 Companion Cleaner */ = {
+			isa = PBXGroup;
+			children = (
+				A00000000000000000000201 /* CR3CompanionCleanerApp.swift */,
+				A00000000000000000000202 /* ContentView.swift */,
+				A00000000000000000000203 /* CleanerViewModel.swift */,
+				A00000000000000000000204 /* PhotoScanner.swift */,
+				A00000000000000000000205 /* CleanupService.swift */,
+				A00000000000000000000206 /* Models.swift */,
+				A00000000000000000000208 /* CR3 Companion Cleaner.entitlements */,
+				A00000000000000000000212 /* Assets.xcassets */,
+				A00000000000000000000213 /* BlurDetection.swift */,
+				A00000000000000000000214 /* BlurDetector.mlmodelc */,
+				A00000000000000000000215 /* MagikaDocumentFromPixel-LICENSE.txt */,
+				A00000000000000000000216 /* WebRemoteServer.swift */,
+				A00000000000000000000217 /* BackupCheckService.swift */,
+			);
+			path = "CR3 Companion Cleaner";
+			sourceTree = "<group>";
+		};
+		A00000000000000000000303 /* CR3 Companion CleanerTests */ = {
+			isa = PBXGroup;
+			children = (A00000000000000000000207 /* PhotoScannerTests.swift */);
+			path = "CR3 Companion CleanerTests";
+			sourceTree = "<group>";
+		};
+		A00000000000000000000304 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A00000000000000000000209 /* CR3 Companion Cleaner.app */,
+				A00000000000000000000210 /* CR3 Companion CleanerTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A00000000000000000000701 /* CR3 Companion Cleaner */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A00000000000000000000902 /* Build configuration list for PBXNativeTarget */;
+			buildPhases = (
+				A00000000000000000000501 /* Sources */,
+				A00000000000000000000401 /* Frameworks */,
+				A00000000000000000000503 /* Resources */,
+			);
+			buildRules = ();
+			dependencies = ();
+			name = "CR3 Companion Cleaner";
+			productName = "CR3 Companion Cleaner";
+			productReference = A00000000000000000000209 /* CR3 Companion Cleaner.app */;
+			productType = "com.apple.product-type.application";
+		};
+		A00000000000000000000702 /* CR3 Companion CleanerTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A00000000000000000000903 /* Build configuration list for PBXNativeTarget */;
+			buildPhases = (
+				A00000000000000000000502 /* Sources */,
+				A00000000000000000000402 /* Frameworks */,
+				A00000000000000000000504 /* Resources */,
+			);
+			buildRules = ();
+			dependencies = (A00000000000000000000602 /* PBXTargetDependency */);
+			name = "CR3 Companion CleanerTests";
+			productName = "CR3 Companion CleanerTests";
+			productReference = A00000000000000000000210 /* CR3 Companion CleanerTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A00000000000000000000801 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					A00000000000000000000701 = {CreatedOnToolsVersion = 16.0;};
+					A00000000000000000000702 = {CreatedOnToolsVersion = 16.0; TestTargetID = A00000000000000000000701;};
+				};
+			};
+			buildConfigurationList = A00000000000000000000901 /* Build configuration list for PBXProject */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (en, Base);
+			mainGroup = A00000000000000000000301;
+			productRefGroup = A00000000000000000000304 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A00000000000000000000701 /* CR3 Companion Cleaner */,
+				A00000000000000000000702 /* CR3 Companion CleanerTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A00000000000000000000503 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000108 /* Assets.xcassets in Resources */, A00000000000000000000110 /* BlurDetector.mlmodelc in Resources */, A00000000000000000000111 /* MagikaDocumentFromPixel-LICENSE.txt in Resources */); runOnlyForDeploymentPostprocessing = 0; };
+		A00000000000000000000504 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A00000000000000000000501 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A00000000000000000000101 /* CR3CompanionCleanerApp.swift in Sources */,
+				A00000000000000000000102 /* ContentView.swift in Sources */,
+				A00000000000000000000103 /* CleanerViewModel.swift in Sources */,
+				A00000000000000000000104 /* PhotoScanner.swift in Sources */,
+				A00000000000000000000105 /* CleanupService.swift in Sources */,
+				A00000000000000000000106 /* Models.swift in Sources */,
+				A00000000000000000000109 /* BlurDetection.swift in Sources */,
+				A00000000000000000000112 /* WebRemoteServer.swift in Sources */,
+				A00000000000000000000113 /* BackupCheckService.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A00000000000000000000502 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (A00000000000000000000107 /* PhotoScannerTests.swift in Sources */);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A00000000000000000000602 /* PBXTargetDependency */ = {isa = PBXTargetDependency; target = A00000000000000000000701 /* CR3 Companion Cleaner */; targetProxy = A00000000000000000000601 /* PBXContainerItemProxy */; };
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		A00000000000000000000A01 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {CLANG_ENABLE_MODULES = YES; COPY_PHASE_STRIP = NO; DEBUG_INFORMATION_FORMAT = dwarf; ENABLE_TESTABILITY = YES; GCC_OPTIMIZATION_LEVEL = 0; MACOSX_DEPLOYMENT_TARGET = 13.0; ONLY_ACTIVE_ARCH = YES; SDKROOT = macosx; SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG; SWIFT_OPTIMIZATION_LEVEL = "-Onone";}; name = Debug;};
+		A00000000000000000000A02 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {CLANG_ENABLE_MODULES = YES; COPY_PHASE_STRIP = NO; DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym"; ENABLE_NS_ASSERTIONS = NO; MACOSX_DEPLOYMENT_TARGET = 13.0; SDKROOT = macosx; SWIFT_COMPILATION_MODE = wholemodule;}; name = Release;};
+		A00000000000000000000A03 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_ENTITLEMENTS = "CR3 Companion Cleaner/CR3 Companion Cleaner.entitlements"; CODE_SIGN_STYLE = Automatic; COMBINE_HIDPI_IMAGES = YES; CURRENT_PROJECT_VERSION = 1; ENABLE_HARDENED_RUNTIME = YES; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_KEY_CFBundleDisplayName = "CR3 Companion Cleaner"; INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.photography"; INFOPLIST_KEY_NSBonjourServices = "_cr3cleaner._tcp"; INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Allow phone photo review on your local Wi-Fi network."; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = com.example.CR3CompanionCleaner; PRODUCT_MODULE_NAME = CR3_Companion_Cleaner; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_VERSION = 5.0;}; name = Debug;};
+		A00000000000000000000A04 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_ENTITLEMENTS = "CR3 Companion Cleaner/CR3 Companion Cleaner.entitlements"; CODE_SIGN_STYLE = Automatic; COMBINE_HIDPI_IMAGES = YES; CURRENT_PROJECT_VERSION = 1; ENABLE_HARDENED_RUNTIME = YES; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_KEY_CFBundleDisplayName = "CR3 Companion Cleaner"; INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.photography"; INFOPLIST_KEY_NSBonjourServices = "_cr3cleaner._tcp"; INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Allow phone photo review on your local Wi-Fi network."; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = com.example.CR3CompanionCleaner; PRODUCT_MODULE_NAME = CR3_Companion_Cleaner; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_VERSION = 5.0;}; name = Release;};
+		A00000000000000000000A05 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {BUNDLE_LOADER = "$(TEST_HOST)"; CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = YES; MACOSX_DEPLOYMENT_TARGET = 13.0; PRODUCT_BUNDLE_IDENTIFIER = com.example.CR3CompanionCleanerTests; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_VERSION = 5.0; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CR3 Companion Cleaner.app/Contents/MacOS/CR3 Companion Cleaner";}; name = Debug;};
+		A00000000000000000000A06 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {BUNDLE_LOADER = "$(TEST_HOST)"; CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = YES; MACOSX_DEPLOYMENT_TARGET = 13.0; PRODUCT_BUNDLE_IDENTIFIER = com.example.CR3CompanionCleanerTests; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_VERSION = 5.0; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CR3 Companion Cleaner.app/Contents/MacOS/CR3 Companion Cleaner";}; name = Release;};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A00000000000000000000901 /* Build configuration list for PBXProject */ = {isa = XCConfigurationList; buildConfigurations = (A00000000000000000000A01 /* Debug */, A00000000000000000000A02 /* Release */); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;};
+		A00000000000000000000902 /* Build configuration list for PBXNativeTarget */ = {isa = XCConfigurationList; buildConfigurations = (A00000000000000000000A03 /* Debug */, A00000000000000000000A04 /* Release */); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;};
+		A00000000000000000000903 /* Build configuration list for PBXNativeTarget */ = {isa = XCConfigurationList; buildConfigurations = (A00000000000000000000A05 /* Debug */, A00000000000000000000A06 /* Release */); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;};
+/* End XCConfigurationList section */
+	};
+	rootObject = A00000000000000000000801 /* Project object */;
+}

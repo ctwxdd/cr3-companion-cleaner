@@ -1,0 +1,87 @@
+[
+  {
+    "metadataOutputVersion" : "3.0",
+    "shortDescription" : "Local sharp-versus-blurred photo classifier",
+    "outputSchema" : [
+      {
+        "hasShapeFlexibility" : "0",
+        "isOptional" : "0",
+        "dataType" : "Float16",
+        "formattedType" : "MultiArray (Float16 1 × 2)",
+        "shortDescription" : "",
+        "shape" : "[1, 2]",
+        "name" : "probabilities",
+        "type" : "MultiArray"
+      }
+    ],
+    "storagePrecision" : "Float16",
+    "modelParameters" : [
+
+    ],
+    "author" : "Duy Tran Thanh (Brad Duy); Core ML conversion for CR3 Companion Cleaner",
+    "specificationVersion" : 7,
+    "license" : "MIT",
+    "mlProgramOperationTypeHistogram" : {
+      "Ios16.softmax" : 1,
+      "Ios16.reduceMean" : 11,
+      "Ios16.linear" : 2,
+      "Ios16.add" : 10,
+      "Concat" : 1,
+      "Ios16.realDiv" : 1,
+      "Ios16.reduceSum" : 1,
+      "Ios16.sigmoidHard" : 29,
+      "Ios16.square" : 1,
+      "Ios16.sub" : 3,
+      "Ios16.cast" : 1,
+      "Ios16.thresholdedRelu" : 21,
+      "Ios16.sqrt" : 1,
+      "Ios16.conv" : 63,
+      "Ios16.clip" : 1,
+      "Ios16.abs" : 1,
+      "Ios16.batchNorm" : 1,
+      "Ios16.relu" : 19,
+      "Ios16.reshape" : 4,
+      "Ios16.mul" : 32
+    },
+    "computePrecision" : "Mixed (Float16, Float32, Int32)",
+    "stateSchema" : [
+
+    ],
+    "isUpdatable" : "0",
+    "availability" : {
+      "macOS" : "13.0",
+      "tvOS" : "16.0",
+      "visionOS" : "1.0",
+      "watchOS" : "9.0",
+      "iOS" : "16.0",
+      "macCatalyst" : "16.0"
+    },
+    "modelType" : {
+      "name" : "MLModelType_mlProgram"
+    },
+    "inputSchema" : [
+      {
+        "height" : "384",
+        "colorspace" : "RGB",
+        "isOptional" : "0",
+        "width" : "384",
+        "isColor" : "1",
+        "formattedType" : "Image (Color 384 × 384)",
+        "hasSizeFlexibility" : "0",
+        "type" : "Image",
+        "shortDescription" : "",
+        "name" : "image"
+      }
+    ],
+    "userDefinedMetadata" : {
+      "com.github.apple.coremltools.conversion_date" : "2026-07-13",
+      "com.github.apple.coremltools.source_dialect" : "TorchScript",
+      "source" : "bradduy\/MagikaDocumentFromPixel",
+      "com.github.apple.coremltools.source" : "torch==2.13.0",
+      "com.github.apple.coremltools.version" : "9.0",
+      "labels" : "sharp,blurred"
+    },
+    "generatedClassName" : "BlurDetector",
+    "method" : "predict"
+  }
+]
