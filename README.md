@@ -111,6 +111,8 @@ Desktop zoom follows the trackpad directly and uses a short, non-bouncing
 ease-out only for Space/double-click transitions. A native key-down monitor
 handles Left/Right auto-repeat immediately instead of waiting for SwiftUI
 focus controls to release the key.
+Zoom, pan, and the EXIF drawer live in an isolated canvas view, so their
+animation updates do not re-diff a filmstrip containing thousands of photos.
 The right-edge **Photo Information** drawer (or the `I` key) shows the current
 photo's camera, lens, shutter, aperture, ISO, focal length, exposure bias,
 metering, white balance, flash, capture time, and dimensions. EXIF is read

@@ -1050,68 +1050,13 @@ private struct DesktopPhotoPreview: View {
     @Binding var activeURL: URL?
     @Binding var selectedURLs: Set<URL>
     let onTrash: () -> Void
-    @State private var zoom: CGFloat = 1
-    @State private var settledZoom: CGFloat = 1
-    @State private var offset: CGSize = .zero
-    @State private var settledOffset: CGSize = .zero
     @State private var scrubIndex = 0.0
     @State private var isScrubbing = false
-    @State private var showsEXIF = false
+    @State private var zoomController = DesktopZoomController()
 
     var body: some View {
         VStack(spacing: 0) {
-            GeometryReader { proxy in
-                ZStack {
-                    Color.black
-                    if let activeURL {
-                        LocalPhotoImage(url: activeURL, maxPixel: 2_400, priority: .active)
-                            .frame(width: proxy.size.width, height: proxy.size.height)
-                            .scaleEffect(zoom)
-                            .offset(offset)
-                    }
-                }
-                .clipped()
-                .contentShape(Rectangle())
-                .gesture(MagnificationGesture()
-                    .onChanged { value in zoom = min(6, max(1, settledZoom * value)) }
-                    .onEnded { _ in
-                        settledZoom = zoom
-                        if zoom <= 1.01 { resetZoom() }
-                    })
-                .simultaneousGesture(DragGesture()
-                    .onChanged { value in
-                        guard zoom > 1 else { return }
-                        offset = CGSize(
-                            width: settledOffset.width + value.translation.width,
-                            height: settledOffset.height + value.translation.height
-                        )
-                    }
-                    .onEnded { _ in settledOffset = offset })
-                .onTapGesture(count: 2, perform: toggleZoom)
-                .overlay(alignment: .trailing) {
-                    HStack(spacing: 8) {
-                        Button {
-                            withAnimation(.easeOut(duration: 0.16)) { showsEXIF.toggle() }
-                        } label: {
-                            Image(systemName: showsEXIF ? "chevron.right" : "info.circle.fill")
-                                .font(.title3)
-                                .frame(width: 30, height: 44)
-                        }
-                        .buttonStyle(.plain)
-                        .background(.ultraThinMaterial, in: Capsule())
-                        .keyboardShortcut("i", modifiers: [])
-                        .help(showsEXIF ? "Hide photo information" : "Show photo information")
-
-                        if showsEXIF, let activeURL {
-                            PhotoEXIFPanel(url: activeURL)
-                                .frame(width: 290)
-                                .transition(.move(edge: .trailing).combined(with: .opacity))
-                        }
-                    }
-                    .padding(.vertical, 10)
-                    .padding(.trailing, 8)
-                }
-            }
+            ZoomablePhotoCanvas(url: activeURL, controller: zoomController)
 
             ScrollViewReader { reader in
                 VStack(spacing: 0) {
@@ -1132,8 +1077,8 @@ private struct DesktopPhotoPreview: View {
                         Text("\(selectedURLs.count) selected")
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                        Button(zoom > 1 ? "Fit" : "Zoom 2×", systemImage: "magnifyingglass") {
-                            toggleZoom()
+                        Button("Fit / 2×", systemImage: "magnifyingglass") {
+                            zoomController.requestToggle()
                         }
                         .help("Press Space to toggle zoom")
                     }
@@ -1210,7 +1155,7 @@ private struct DesktopPhotoPreview: View {
         .background(DesktopBrowseKeyMonitor(
             onLeft: { move(-1) },
             onRight: { move(1) },
-            onSpace: toggleZoom
+            onSpace: zoomController.requestToggle
         ))
         .onDeleteCommand(perform: onTrash)
         .task(id: activeURL) {
@@ -1270,6 +1215,78 @@ private struct DesktopPhotoPreview: View {
             selectedURLs.insert(url)
         }
         activeURL = url
+    }
+
+}
+
+private final class DesktopZoomController: ObservableObject {
+    @Published private(set) var toggleVersion = 0
+    func requestToggle() { toggleVersion &+= 1 }
+}
+
+private struct ZoomablePhotoCanvas: View {
+    let url: URL?
+    @ObservedObject var controller: DesktopZoomController
+    @State private var zoom: CGFloat = 1
+    @State private var settledZoom: CGFloat = 1
+    @State private var offset: CGSize = .zero
+    @State private var settledOffset: CGSize = .zero
+    @State private var showsEXIF = false
+
+    var body: some View {
+        GeometryReader { proxy in
+            ZStack {
+                Color.black
+                if let url {
+                    LocalPhotoImage(url: url, maxPixel: 2_400, priority: .active)
+                        .frame(width: proxy.size.width, height: proxy.size.height)
+                        .scaleEffect(zoom)
+                        .offset(offset)
+                }
+            }
+            .clipped()
+            .contentShape(Rectangle())
+            .gesture(MagnificationGesture()
+                .onChanged { value in zoom = min(6, max(1, settledZoom * value)) }
+                .onEnded { _ in
+                    settledZoom = zoom
+                    if zoom <= 1.01 { resetZoom() }
+                })
+            .simultaneousGesture(DragGesture()
+                .onChanged { value in
+                    guard zoom > 1 else { return }
+                    offset = CGSize(
+                        width: settledOffset.width + value.translation.width,
+                        height: settledOffset.height + value.translation.height
+                    )
+                }
+                .onEnded { _ in settledOffset = offset })
+            .onTapGesture(count: 2, perform: toggleZoom)
+            .overlay(alignment: .trailing) {
+                HStack(spacing: 8) {
+                    Button {
+                        withAnimation(.easeOut(duration: 0.16)) { showsEXIF.toggle() }
+                    } label: {
+                        Image(systemName: showsEXIF ? "chevron.right" : "info.circle.fill")
+                            .font(.title3)
+                            .frame(width: 30, height: 44)
+                    }
+                    .buttonStyle(.plain)
+                    .background(.ultraThinMaterial, in: Capsule())
+                    .keyboardShortcut("i", modifiers: [])
+                    .help(showsEXIF ? "Hide photo information" : "Show photo information")
+
+                    if showsEXIF, let url {
+                        PhotoEXIFPanel(url: url)
+                            .frame(width: 290)
+                            .transition(.move(edge: .trailing).combined(with: .opacity))
+                    }
+                }
+                .padding(.vertical, 10)
+                .padding(.trailing, 8)
+            }
+        }
+        .onChange(of: controller.toggleVersion) { _ in toggleZoom() }
     }
 
     private func toggleZoom() {
