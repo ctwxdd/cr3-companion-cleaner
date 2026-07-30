@@ -94,7 +94,10 @@ AI analysis. Choose **Browse all photos (no AI)** to cull from the same grid,
 filmstrip, Trash, and Undo workflow; images are still decoded only on demand.
 Browse thumbnails use tight spacing and preserve portrait/landscape aspect
 ratios. Phone pinch gestures zoom and pan only the preview image while controls
-stay fixed. The macOS **Browse Photos** tab provides the same on-demand grid,
+stay fixed. Swiping between nearby photos preserves the zoom level and pan
+position for expression comparison; double-tapping a zoomed photo returns to
+the full-image view. The filmstrip follows completed Trash operations without
+requiring a page reload. The macOS **Browse Photos** tab provides the same on-demand grid,
 main preview, filmstrip, trackpad pinch zoom, keyboard navigation, Trash, and
 Undo workflow. Clicking a grid or filmstrip thumbnail selects the current
 photo; Left/Right changes that selection, and Delete opens the Trash
