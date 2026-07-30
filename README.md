@@ -102,7 +102,8 @@ main preview, filmstrip, trackpad pinch zoom, keyboard navigation, Trash, and
 Undo workflow. The full-width desktop viewer keeps selection checkmarks and
 the current sequence number directly in its bottom filmstrip instead of
 duplicating thumbnails in a sidebar. Left/Right preserves zoom and pan for
-comparison, Space toggles Fit/2×, and Delete opens the Trash confirmation
+comparison, Space toggles Fit/2×, and the number scrubber jumps across large
+libraries without decoding every photo passed while dragging. Delete opens the Trash confirmation
 before automatically advancing to the next photo. **Choose Subfolder…**
 and **Up** switch within the originally
 authorized root without reopening access to unrelated folders.
@@ -180,6 +181,9 @@ The native decode queue prioritizes the active photo above nearby preloads and
 ordinary filmstrip/analysis work. Jumping far through a large filmstrip
 therefore promotes the new photo—even when the same decode was already
 queued—instead of waiting behind thumbnails from the abandoned position.
+Each focus change demotes unfinished work from the previous position and uses
+a generation token to discard stale preloads that arrive late. The closest
+two full previews and six filmstrip thumbnails on each side then preload first.
 Both macOS and Web Remote image queues adapt to the machine but stay capped at
 four concurrent decodes (two in Low Power Mode or under thermal pressure). The
 phone preloads only four nearby full previews instead of issuing redundant

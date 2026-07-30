@@ -1054,6 +1054,8 @@ private struct DesktopPhotoPreview: View {
     @State private var settledZoom: CGFloat = 1
     @State private var offset: CGSize = .zero
     @State private var settledOffset: CGSize = .zero
+    @State private var scrubIndex = 0.0
+    @State private var isScrubbing = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -1091,12 +1093,19 @@ private struct DesktopPhotoPreview: View {
             ScrollViewReader { reader in
                 VStack(spacing: 0) {
                     HStack {
-                        if let index = activeURL.flatMap({ urls.firstIndex(of: $0) }) {
-                            Text("\(index + 1) of \(urls.count)")
-                                .font(.caption.monospacedDigit())
-                                .foregroundStyle(.secondary)
+                        Text("\(displayedIndex + 1) of \(urls.count)")
+                            .font(.caption.monospacedDigit())
+                            .foregroundStyle(.secondary)
+                            .frame(minWidth: 88, alignment: .leading)
+                        Slider(
+                            value: $scrubIndex,
+                            in: 0...Double(max(0, urls.count - 1)),
+                            step: 1
+                        ) { editing in
+                            isScrubbing = editing
+                            if !editing { select(urls[displayedIndex]) }
                         }
-                        Spacer()
+                        .help("Drag to a photo number; decoding starts when released")
                         Text("\(selectedURLs.count) selected")
                             .font(.caption)
                             .foregroundStyle(.secondary)
@@ -1109,7 +1118,7 @@ private struct DesktopPhotoPreview: View {
                     .padding(.horizontal, 8)
                     .frame(height: 28)
 
-                    ScrollView(.horizontal, showsIndicators: false) {
+                    ScrollView(.horizontal, showsIndicators: true) {
                         LazyHStack(spacing: 4) {
                             ForEach(urls.indices, id: \.self) { index in
                                 let url = urls[index]
@@ -1167,8 +1176,12 @@ private struct DesktopPhotoPreview: View {
                 }
                 .background(Color(nsColor: .controlBackgroundColor))
                 .onChange(of: activeURL) { url in
-                    if let url { withAnimation(.easeOut(duration: 0.16)) { reader.scrollTo(url, anchor: .center) } }
+                    guard let url, let index = urls.firstIndex(of: url) else { return }
+                    if !isScrubbing { scrubIndex = Double(index) }
+                    withAnimation(.easeOut(duration: 0.16)) { reader.scrollTo(url, anchor: .center) }
                 }
+                .onChange(of: urls.count) { _ in syncScrubber() }
+                .onAppear(perform: syncScrubber)
             }
         }
         .focusable()
@@ -1179,17 +1192,24 @@ private struct DesktopPhotoPreview: View {
         .onDeleteCommand(perform: onTrash)
         .task(id: activeURL) {
             guard let activeURL, let index = urls.firstIndex(of: activeURL) else { return }
-            let nearby = (-2...2).compactMap { offset -> URL? in
-                guard offset != 0, urls.indices.contains(index + offset) else { return nil }
-                return urls[index + offset]
+            guard !Task.isCancelled else { return }
+            let focusGeneration = await ImageThumbnailCache.shared.focus(on: activeURL)
+            guard !Task.isCancelled else { return }
+            let requests = (1...6).flatMap { distance -> [(URL, Int)] in
+                [-distance, distance].flatMap { offset -> [(URL, Int)] in
+                    guard urls.indices.contains(index + offset) else { return [] }
+                    let url = urls[index + offset]
+                    return distance <= 2 ? [(url, 180), (url, 2_400)] : [(url, 180)]
+                }
             }
             await withTaskGroup(of: Void.self) { group in
-                for url in nearby {
+                for (url, maxPixel) in requests {
                     group.addTask {
                         _ = await ImageThumbnailCache.shared.image(
                             for: url,
-                            maxPixel: 2_400,
-                            priority: .nearby
+                            maxPixel: maxPixel,
+                            priority: .nearby,
+                            focusGeneration: focusGeneration
                         )
                     }
                 }
@@ -1201,6 +1221,18 @@ private struct DesktopPhotoPreview: View {
         guard !urls.isEmpty else { return }
         let index = activeURL.flatMap { urls.firstIndex(of: $0) } ?? 0
         select(urls[(index + amount + urls.count) % urls.count])
+    }
+
+    private var displayedIndex: Int {
+        min(max(Int(scrubIndex.rounded()), 0), urls.count - 1)
+    }
+
+    private func syncScrubber() {
+        guard let activeURL, let index = urls.firstIndex(of: activeURL) else {
+            scrubIndex = 0
+            return
+        }
+        scrubIndex = Double(index)
     }
 
     private func select(_ url: URL) {
@@ -1249,6 +1281,7 @@ private struct LocalPhotoImage: View {
             }
         }
         .task(id: url.path + "|\(maxPixel)|\(priority.rawValue)") {
+            guard !Task.isCancelled else { return }
             let cgImage = await ImageThumbnailCache.shared.image(
                 for: url,
                 maxPixel: maxPixel,

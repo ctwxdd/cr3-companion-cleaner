@@ -26,11 +26,18 @@ enum ThumbnailRequestPriority: Int, Sendable {
 private final class PendingThumbnailRequest: @unchecked Sendable {
     let task: Task<CGImage?, Never>
     let operation: BlockOperation
+    let urlPath: String
     var priority: ThumbnailRequestPriority
 
-    init(task: Task<CGImage?, Never>, operation: BlockOperation, priority: ThumbnailRequestPriority) {
+    init(
+        task: Task<CGImage?, Never>,
+        operation: BlockOperation,
+        urlPath: String,
+        priority: ThumbnailRequestPriority
+    ) {
         self.task = task
         self.operation = operation
+        self.urlPath = urlPath
         self.priority = priority
     }
 }
@@ -52,6 +59,8 @@ actor ImageThumbnailCache {
 
     private let cache = NSCache<NSString, CachedThumbnail>()
     private var pending: [String: PendingThumbnailRequest] = [:]
+    private var focusedURLPath: String?
+    private var focusGeneration = 0
 
     init() {
         let memory = ProcessInfo.processInfo.physicalMemory
@@ -64,10 +73,14 @@ actor ImageThumbnailCache {
     func image(
         for url: URL,
         maxPixel: Int,
-        priority: ThumbnailRequestPriority = .standard
+        priority: ThumbnailRequestPriority = .standard,
+        focusGeneration requestGeneration: Int? = nil
     ) async -> CGImage? {
+        if let requestGeneration, requestGeneration != focusGeneration { return nil }
+        let urlPath = url.standardizedFileURL.path
+        if priority == .active { focus(onPath: urlPath) }
         let values = try? url.resourceValues(forKeys: [.fileSizeKey, .contentModificationDateKey])
-        let key = "\(url.standardizedFileURL.path)|\(values?.fileSize ?? 0)|\(values?.contentModificationDate?.timeIntervalSinceReferenceDate ?? 0)|\(maxPixel)"
+        let key = "\(urlPath)|\(values?.fileSize ?? 0)|\(values?.contentModificationDate?.timeIntervalSinceReferenceDate ?? 0)|\(maxPixel)"
         if let cached = cache.object(forKey: key as NSString) { return cached.image }
         if let request = pending[key] {
             if priority.rawValue > request.priority.rawValue {
@@ -97,13 +110,35 @@ actor ImageThumbnailCache {
                 Self.decodeQueue.addOperation(operation)
             }
         }
-        pending[key] = PendingThumbnailRequest(task: task, operation: operation, priority: priority)
+        pending[key] = PendingThumbnailRequest(
+            task: task,
+            operation: operation,
+            urlPath: urlPath,
+            priority: priority
+        )
         let image = await task.value
         pending[key] = nil
         if let image {
             cache.setObject(CachedThumbnail(image), forKey: key as NSString, cost: image.bytesPerRow * image.height)
         }
         return image
+    }
+
+    @discardableResult
+    func focus(on url: URL) -> Int {
+        focus(onPath: url.standardizedFileURL.path)
+        return focusGeneration
+    }
+
+    private func focus(onPath path: String) {
+        guard focusedURLPath != path else { return }
+        focusedURLPath = path
+        focusGeneration &+= 1
+        for request in pending.values
+            where request.urlPath != path && request.priority != .standard {
+            request.priority = .standard
+            request.operation.queuePriority = ThumbnailRequestPriority.standard.queuePriority
+        }
     }
 }
 
