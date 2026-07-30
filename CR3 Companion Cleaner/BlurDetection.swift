@@ -703,6 +703,7 @@ enum PhotoMetadata {
         let exif = properties[kCGImagePropertyExifDictionary] as? [CFString: Any] ?? [:]
         let tiff = properties[kCGImagePropertyTIFFDictionary] as? [CFString: Any] ?? [:]
         let auxiliary = properties[kCGImagePropertyExifAuxDictionary] as? [CFString: Any] ?? [:]
+        let gps = properties[kCGImagePropertyGPSDictionary] as? [CFString: Any] ?? [:]
         var rows: [PhotoMetadataRow] = []
 
         let camera = [
@@ -739,6 +740,23 @@ enum PhotoMetadata {
         if let flash = number(in: exif, key: kCGImagePropertyExifFlash) {
             rows.append(.init(label: "Flash", value: Int(flash) & 1 == 1 ? "Fired" : "Did not fire"))
         }
+        if let latitude = number(in: gps, key: kCGImagePropertyGPSLatitude),
+           let longitude = number(in: gps, key: kCGImagePropertyGPSLongitude) {
+            let formatted = formatGPS(
+                latitude: latitude,
+                longitude: longitude,
+                latitudeRef: gps[kCGImagePropertyGPSLatitudeRef] as? String,
+                longitudeRef: gps[kCGImagePropertyGPSLongitudeRef] as? String
+            )
+            rows.append(.init(
+                label: "GPS",
+                value: formatted
+            ))
+        }
+        if var altitude = number(in: gps, key: kCGImagePropertyGPSAltitude) {
+            if number(in: gps, key: kCGImagePropertyGPSAltitudeRef) == 1 { altitude = -altitude }
+            rows.append(.init(label: "Altitude", value: String(format: "%.1f m", altitude)))
+        }
         if let date = exif[kCGImagePropertyExifDateTimeOriginal] as? String {
             rows.append(.init(label: "Captured", value: date))
         }
@@ -752,6 +770,26 @@ enum PhotoMetadata {
     static func formatExposureTime(_ seconds: Double) -> String {
         if seconds >= 0.5 { return String(format: seconds >= 10 ? "%.0f s" : "%.1f s", seconds) }
         return "1/\(max(1, Int((1 / seconds).rounded()))) s"
+    }
+
+    static func timelineSampleIndices(count: Int) -> [Int] {
+        guard count > 0 else { return [] }
+        var seen = Set<Int>()
+        return [0.0, 0.25, 0.5, 0.75, 1.0].compactMap { fraction in
+            let index = Int((Double(count - 1) * fraction).rounded())
+            return seen.insert(index).inserted ? index : nil
+        }
+    }
+
+    static func formatGPS(
+        latitude: Double,
+        longitude: Double,
+        latitudeRef: String?,
+        longitudeRef: String?
+    ) -> String {
+        let signedLatitude = latitudeRef?.uppercased() == "S" ? -latitude : latitude
+        let signedLongitude = longitudeRef?.uppercased() == "W" ? -longitude : longitude
+        return String(format: "%.6f, %.6f", signedLatitude, signedLongitude)
     }
 
     private static func number(in dictionary: [CFString: Any], key: CFString) -> Double? {

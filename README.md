@@ -103,7 +103,10 @@ Undo workflow. The full-width desktop viewer keeps selection checkmarks and
 the current sequence number directly in its bottom filmstrip instead of
 duplicating thumbnails in a sidebar. Left/Right preserves zoom and pan for
 comparison, Space toggles Fit/2×, and the number scrubber jumps across large
-libraries without decoding every photo passed while dragging. Delete opens the Trash confirmation
+libraries without decoding every photo passed while dragging. Five sampled
+capture-date ticks provide timeline landmarks without scanning every file's
+EXIF. Filmstrip selection uses a Lightroom-style dark background and outline;
+Command-click toggles multi-selection. Delete opens the Trash confirmation
 before automatically advancing to the next photo. **Choose Subfolder…**
 and **Up** switch within the originally
 authorized root without reopening access to unrelated folders.
@@ -115,7 +118,8 @@ Zoom, pan, and the EXIF drawer live in an isolated canvas view, so their
 animation updates do not re-diff a filmstrip containing thousands of photos.
 The right-edge **Photo Information** drawer (or the `I` key) shows the current
 photo's camera, lens, shutter, aperture, ISO, focal length, exposure bias,
-metering, white balance, flash, capture time, and dimensions. EXIF is read
+metering, white balance, flash, GPS coordinates/altitude when present, capture
+time, and dimensions. EXIF is read
 only while the drawer is open and retained in a bounded 200-entry memory
 cache keyed by file size and modification time; it never creates a disk cache.
 The server generates previews concurrently and preloads the previous/next three

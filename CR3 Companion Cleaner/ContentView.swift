@@ -1065,15 +1065,19 @@ private struct DesktopPhotoPreview: View {
                             .font(.caption.monospacedDigit())
                             .foregroundStyle(.secondary)
                             .frame(minWidth: 88, alignment: .leading)
-                        Slider(
-                            value: $scrubIndex,
-                            in: 0...Double(max(0, urls.count - 1)),
-                            step: 1
-                        ) { editing in
-                            isScrubbing = editing
-                            if !editing { select(urls[displayedIndex]) }
+                        VStack(spacing: 0) {
+                            Slider(
+                                value: $scrubIndex,
+                                in: 0...Double(max(0, urls.count - 1)),
+                                step: 1
+                            ) { editing in
+                                isScrubbing = editing
+                                if !editing { select(urls[displayedIndex]) }
+                            }
+                            .help("Drag to a photo number; decoding starts when released")
+                            PhotoDateScale(urls: urls)
+                                .frame(height: 16)
                         }
-                        .help("Drag to a photo number; decoding starts when released")
                         Text("\(selectedURLs.count) selected")
                             .font(.caption)
                             .foregroundStyle(.secondary)
@@ -1083,50 +1087,56 @@ private struct DesktopPhotoPreview: View {
                         .help("Press Space to toggle zoom")
                     }
                     .padding(.horizontal, 8)
-                    .frame(height: 28)
+                    .frame(height: 46)
 
                     ScrollView(.horizontal, showsIndicators: true) {
                         LazyHStack(spacing: 4) {
                             ForEach(urls.indices, id: \.self) { index in
                                 let url = urls[index]
-                                ZStack(alignment: .topTrailing) {
-                                    Button { select(url) } label: {
+                                let isSelected = selectedURLs.contains(url)
+                                let isActive = activeURL == url
+                                Button {
+                                    if NSEvent.modifierFlags.contains(.command) {
+                                        toggleSelection(url)
+                                    } else {
+                                        select(url)
+                                    }
+                                } label: {
+                                    ZStack(alignment: .bottomLeading) {
                                         LocalPhotoImage(
                                             url: url,
                                             maxPixel: 180,
-                                            priority: activeURL == url ? .active : .standard
+                                            priority: isActive ? .active : .standard
                                         )
                                             .frame(width: 62, height: 66)
                                             .background(.black)
-                                            .overlay {
-                                                RoundedRectangle(cornerRadius: 3)
-                                                    .stroke(activeURL == url ? Color.white : .clear, lineWidth: 2)
-                                            }
-                                    }
-                                    .buttonStyle(.plain)
 
-                                    Button { toggleSelection(url) } label: {
-                                        Image(systemName: selectedURLs.contains(url) ? "checkmark.circle.fill" : "circle")
-                                            .symbolRenderingMode(.palette)
-                                            .foregroundStyle(.white, Color.accentColor)
-                                            .shadow(radius: 2)
-                                    }
-                                    .buttonStyle(.plain)
-                                    .padding(3)
-
-                                    if activeURL == url {
-                                        Text("#\(index + 1)")
-                                            .font(.caption2.monospacedDigit().bold())
-                                            .padding(.horizontal, 4)
-                                            .padding(.vertical, 2)
-                                            .background(.black.opacity(0.75), in: Capsule())
-                                            .padding(3)
-                                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
-                                            .allowsHitTesting(false)
+                                        if isActive {
+                                            Text("#\(index + 1)")
+                                                .font(.caption2.monospacedDigit().bold())
+                                                .padding(.horizontal, 4)
+                                                .padding(.vertical, 2)
+                                                .background(.black.opacity(0.75), in: Capsule())
+                                                .padding(3)
+                                        }
                                     }
                                 }
+                                .buttonStyle(.plain)
+                                .padding(3)
+                                .background(
+                                    isSelected ? Color.black : Color.clear,
+                                    in: RoundedRectangle(cornerRadius: 5)
+                                )
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: 5)
+                                        .stroke(
+                                            isActive ? Color.accentColor : isSelected ? Color.white.opacity(0.85) : .clear,
+                                            lineWidth: isActive ? 3 : 2
+                                        )
+                                }
+                                .help("Click to select • Command-click to toggle selection")
                                 .contextMenu {
-                                    Button(selectedURLs.contains(url) ? "Deselect" : "Select") {
+                                    Button(isSelected ? "Deselect" : "Select") {
                                         toggleSelection(url)
                                     }
                                     Button("Reveal in Finder") {
@@ -1139,7 +1149,7 @@ private struct DesktopPhotoPreview: View {
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
                     }
-                    .frame(height: 76)
+                    .frame(height: 84)
                 }
                 .background(Color(nsColor: .controlBackgroundColor))
                 .onChange(of: activeURL) { url in
@@ -1217,6 +1227,63 @@ private struct DesktopPhotoPreview: View {
         activeURL = url
     }
 
+}
+
+private struct PhotoDateMarker: Identifiable, Sendable {
+    let id: Int
+    let fraction: Double
+    let label: String
+}
+
+private struct PhotoDateScale: View {
+    let urls: [URL]
+    @State private var markers: [PhotoDateMarker] = []
+
+    var body: some View {
+        GeometryReader { proxy in
+            ZStack(alignment: .topLeading) {
+                ForEach(markers) { marker in
+                    let tickX = proxy.size.width * marker.fraction
+                    Rectangle()
+                        .fill(.secondary.opacity(0.65))
+                        .frame(width: 1, height: 4)
+                        .position(x: tickX, y: 2)
+                    Text(marker.label)
+                        .font(.system(size: 9, design: .monospaced))
+                        .foregroundStyle(.secondary)
+                        .position(
+                            x: min(max(tickX, 28), max(28, proxy.size.width - 28)),
+                            y: 11
+                        )
+                }
+            }
+        }
+        .task(id: scaleID) {
+            let snapshot = urls
+            let loaded = await Task.detached(priority: .utility) {
+                guard !snapshot.isEmpty else { return [PhotoDateMarker]() }
+                let formatter = DateFormatter()
+                formatter.locale = Locale(identifier: "en_US_POSIX")
+                formatter.dateFormat = "MM/dd/yy"
+                return PhotoMetadata.timelineSampleIndices(count: snapshot.count).map { index in
+                    let date = autoreleasepool {
+                        PhotoMetadata.captureDate(for: snapshot[index])
+                    }
+                    return PhotoDateMarker(
+                        id: index,
+                        fraction: Double(index) / Double(max(1, snapshot.count - 1)),
+                        label: formatter.string(from: date)
+                    )
+                }
+            }.value
+            guard !Task.isCancelled else { return }
+            markers = loaded
+        }
+    }
+
+    private var scaleID: String {
+        "\(urls.count)|\(urls.first?.path ?? "")|\(urls.last?.path ?? "")"
+    }
 }
 
 private final class DesktopZoomController: ObservableObject {
