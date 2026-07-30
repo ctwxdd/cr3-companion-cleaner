@@ -10,7 +10,7 @@ enum ScannerError: LocalizedError {
         case .notDirectory(let url):
             return "The selected item is not a folder: \(url.path)"
         case .noPermission(let url):
-            return "CR3 Companion Cleaner does not have permission to read this folder: \(url.path)"
+            return "Photo Sift does not have permission to read this folder: \(url.path)"
         case .cannotEnumerate(let url):
             return "The folder could not be scanned: \(url.path)"
         }

@@ -1,8 +1,15 @@
-# CR3 Companion Cleaner
+# Photo Sift
 
-A native macOS 13+ SwiftUI utility that finds Canon `.CR3` files without a
-same-name `.JPG`/`.JPEG` companion and, after confirmation, moves those RAW
-files and their listed same-name `.XMP` sidecars to the macOS Trash.
+A native macOS 13+ SwiftUI app for quickly browsing, comparing, selecting, and
+cleaning up large photo folders. Choose or drop a folder and Photo Sift
+immediately opens **Browse Photos**, recursively builds a lightweight JPG/JPEG
+index, and lets you review with a full-size preview, filmstrip, keyboard
+navigation, zoom, EXIF, Trash, and Undo.
+
+**RAW Companion** is an additional safety-focused tool. It finds Canon `.CR3`
+files without a same-name `.JPG`/`.JPEG` companion and, after confirmation,
+moves those RAW files and their listed same-name `.XMP` sidecars to the macOS
+Trash.
 
 When a CR3 is inside an immediate `RAW`, `CR3`, or `ARW` folder (case
 insensitive), a matching JPG/JPEG in the parent folder also protects it.
@@ -10,7 +17,9 @@ insensitive), a matching JPG/JPEG in the parent folder also protects it.
 ## Build
 
 1. Open `CR3 Companion Cleaner.xcodeproj` in Xcode.
-2. Select the **CR3 Companion Cleaner** scheme and **My Mac**.
+2. Select the **CR3 Companion Cleaner** scheme and **My Mac**. The built app is
+   named **Photo Sift**; the internal target name remains stable for project
+   and cache compatibility.
 3. Run with **⌘R**, or run tests with **⌘U**.
 
 Dry Run is enabled by default. The app uses `FileManager.trashItem`; it never
@@ -47,7 +56,7 @@ These measures reduce unnecessary storage activity; they cannot eliminate the
 normal writes required to create a backup. Contributor and AI-agent constraints
 that protect these properties are documented in [`AGENTS.md`](AGENTS.md).
 
-The **Blur Review** tab runs the bundled Core ML model and Apple Vision entirely
+The **Smart Review** tab runs the bundled Core ML model and Apple Vision entirely
 on-device over JPG/JPEG previews. It flags likely blur, possible closed eyes or
 blinks, and low face-capture quality. Small or low-confidence faces are ignored
 and the conservative quality threshold reduces false positives. **Group Bursts** switches the table to
@@ -89,8 +98,9 @@ the responsive page shows filtered thumbnail grids and a 1600-pixel quick
 preview with swipe/previous/next navigation, an iPhone Photos-style scrollable
 filmstrip, **Keep & Next**, Dry Run, Trash,
 and Undo. Moving the current preview to Trash advances to the next photo.
-**Browse Photos** builds a lightweight recursive JPG/JPEG index without running
-AI analysis. Choose **Browse all photos (no AI)** to cull from the same grid,
+**Browse Photos** is the default view and builds a lightweight recursive
+JPG/JPEG index without running AI analysis. Choose **Browse all photos (no AI)**
+to cull from the same grid,
 filmstrip, Trash, and Undo workflow; images are still decoded only on demand.
 Browse thumbnails use tight spacing and preserve portrait/landscape aspect
 ratios. Phone pinch gestures zoom and pan only the preview image while controls
@@ -99,8 +109,8 @@ position for expression comparison; double-tapping a zoomed photo returns to
 the full-image view. The filmstrip follows completed Trash operations without
 requiring a page reload. The macOS **Browse Photos** tab provides an on-demand
 main preview, filmstrip, trackpad pinch zoom, keyboard navigation, Trash, and
-Undo workflow. The full-width desktop viewer keeps selection checkmarks and
-the current sequence number directly in its bottom filmstrip instead of
+Undo workflow. The full-width desktop viewer keeps the selection outline and
+current sequence number directly in its bottom filmstrip instead of
 duplicating thumbnails in a sidebar. Left/Right preserves zoom and pan for
 comparison, Space toggles Fit/2×, and the number scrubber jumps across large
 libraries without decoding every photo passed while dragging. Five sampled
@@ -148,10 +158,12 @@ for one year, so a paired phone reconnects after normal App restarts without
 scanning the QR code again. Choosing **Stop Web Remote** on the Mac revokes the
 saved pairing.
 
-After choosing a folder, RAW scanning and local photo analysis are independent:
-switch between the two result tabs and start either task first. Cleanup results
-stay inside the RAW tab instead of replacing the photo review screen. Switching
-away from a folder that has scan or analysis results asks for confirmation.
+After choosing a folder, Photo Sift automatically enters Browse Photos and
+starts its lightweight recursive photo index. RAW scanning and local photo
+analysis remain independent secondary tools; neither runs until requested.
+Cleanup results stay inside RAW Companion instead of replacing the photo
+browser. Switching away from a folder that has scan or analysis results asks
+for confirmation.
 
 **Backup Check** lets you independently choose a mounted camera memory card and
 a designated backup destination. If no destination is designated, the current

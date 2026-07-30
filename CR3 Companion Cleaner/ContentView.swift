@@ -6,9 +6,9 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 private enum ResultMode: String, CaseIterable, Identifiable {
-    case rawCleanup = "RAW Cleanup"
-    case blurReview = "Blur Review"
     case browse = "Browse Photos"
+    case blurReview = "Smart Review"
+    case rawCleanup = "RAW Companion"
     case backupCheck = "Backup Check"
 
     var id: Self { self }
@@ -34,7 +34,7 @@ struct ContentView: View {
     @StateObject private var model = CleanerViewModel()
     @StateObject private var quickLook = QuickLookPreviewController()
     @State private var isDropTargeted = false
-    @State private var resultMode = ResultMode.rawCleanup
+    @State private var resultMode = ResultMode.browse
     @State private var selectedBlurCandidateIDs: Set<BlurCandidate.ID> = []
     @State private var activeBlurCandidateID: BlurCandidate.ID?
     @State private var groupsBursts = false
@@ -107,8 +107,11 @@ struct ContentView: View {
                 selectedBrowseURLs = urls.first.map { [$0] } ?? []
             }
         }
-        .onChange(of: model.selectedFolder) { _ in
+        .onChange(of: model.selectedFolder) { folder in
             undoManager?.removeAllActions(withTarget: model)
+            guard folder != nil else { return }
+            resultMode = .browse
+            model.browsePhotos()
         }
         .onChange(of: selectedBlurCandidateIDs) { ids in
             activeBlurCandidateID = ids.first(where: { $0 != activeBlurCandidateID }) ?? ids.first
@@ -126,8 +129,8 @@ struct ContentView: View {
                 .font(.system(size: 30))
                 .foregroundStyle(.tint)
             VStack(alignment: .leading, spacing: 2) {
-                Text("CR3 Companion Cleaner").font(.title2.bold())
-                Text("Clean orphaned RAW files and review photo quality locally.")
+                Text("Photo Sift").font(.title2.bold())
+                Text("Browse, compare, and clean up photos locally.")
                     .foregroundStyle(.secondary)
             }
             Spacer()
@@ -160,9 +163,9 @@ struct ContentView: View {
                 .font(.system(size: 64))
                 .foregroundStyle(isDropTargeted ? Color.accentColor : .secondary)
             Text("Drop a photo folder here").font(.title3.bold())
-            Text("The folder and all of its subfolders will be scanned.")
+            Text("Photo Sift opens it in Browse Photos and indexes all subfolders.")
                 .foregroundStyle(.secondary)
-            Button("Choose Folder…") { model.chooseFolder() }
+            Button("Choose Photo Folder…") { model.chooseFolder() }
                 .controlSize(.large)
                 .keyboardShortcut("o", modifiers: .command)
         }
@@ -263,7 +266,7 @@ struct ContentView: View {
                         .font(.system(size: 46))
                         .foregroundStyle(.tint)
                     Text("Ready to Scan RAW").font(.title3.bold())
-                    Text("You can switch to Blur Review and analyze photos without running this scan.")
+                    Text("You can switch to Smart Review and analyze photos without running this scan.")
                         .foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)

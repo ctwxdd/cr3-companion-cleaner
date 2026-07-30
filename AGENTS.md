@@ -1,6 +1,6 @@
 # AI development instructions
 
-CR3 Companion Cleaner is a safety-critical photo utility. Preserve user data
+Photo Sift is a safety-critical photo browsing and culling utility. Preserve user data
 first, then optimize for responsiveness, bounded memory, and minimal avoidable
 storage I/O. The app is intentionally designed to reduce SSD/NVMe writes,
 swapfile growth, memory-card pressure, and repeated full-library scans.
