@@ -581,12 +581,20 @@ final class CleanerViewModel: ObservableObject {
             }
             reviewTrashReport = report
             if !report.dryRun {
-                if !report.trashedItems.isEmpty {
-                    let movedURLs = Set(report.trashedItems.map(\.originalURL))
+                let remaining = Set(urls.filter { FileManager.default.fileExists(atPath: $0.path) })
+                let movedURLs = Set(report.trashedItems.map(\.originalURL))
+                if !movedURLs.isEmpty {
                     undoTrashItems = report.trashedItems
                     undoReviewCandidates = candidates.filter { movedURLs.contains($0.url) }
                     undoBrowseURLs = browsePhotoURLs.filter { movedURLs.contains($0) }
                     reviewUndoVersion += 1
+                }
+                // Update the visible library as soon as macOS confirms the
+                // Trash move; RAW companion reconciliation can finish after.
+                blurCandidates.removeAll { !remaining.contains($0.url) && urls.contains($0.url) }
+                burstPhotos.removeAll { !remaining.contains($0.url) && urls.contains($0.url) }
+                browsePhotoURLs.removeAll { !remaining.contains($0) && urls.contains($0) }
+                if !movedURLs.isEmpty {
                     let newOrphans = await scanner.newlyOrphanedCR3s(afterRemovingJPGs: Array(movedURLs))
                     for orphan in newOrphans where !orphanedFiles.contains(where: { $0.url == orphan.url }) {
                         orphanedFiles.append(orphan)
@@ -594,10 +602,6 @@ final class CleanerViewModel: ObservableObject {
                     orphanedFiles.sort { $0.url.path.localizedStandardCompare($1.url.path) == .orderedAscending }
                     if !newOrphans.isEmpty, phase == .ready { phase = .scanned }
                 }
-                let remaining = Set(urls.filter { FileManager.default.fileExists(atPath: $0.path) })
-                blurCandidates.removeAll { !remaining.contains($0.url) && urls.contains($0.url) }
-                burstPhotos.removeAll { !remaining.contains($0.url) && urls.contains($0.url) }
-                browsePhotoURLs.removeAll { !remaining.contains($0) && urls.contains($0) }
                 await cacheCurrentAnalysis()
                 if let selectedFolder, !report.trashedItems.isEmpty {
                     await cacheCurrentScan(for: selectedFolder)

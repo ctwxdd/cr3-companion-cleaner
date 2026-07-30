@@ -625,6 +625,10 @@ struct ContentView: View {
             in: displayedReviewPhotos,
             selected: selectedBlurCandidateIDs
         )
+        if let nextID = preferredNextReviewCandidateID {
+            activeBlurCandidateID = nextID
+            selectedBlurCandidateIDs = [nextID]
+        }
     }
 
     private func requestReviewTrash() {
@@ -643,8 +647,8 @@ struct ContentView: View {
     }
 
     private func rememberNextBrowsePhoto() {
-        guard let activeBrowseURL,
-              let activeIndex = model.browsePhotoURLs.firstIndex(of: activeBrowseURL) else {
+        guard let currentURL = activeBrowseURL,
+              let activeIndex = model.browsePhotoURLs.firstIndex(of: currentURL) else {
             preferredNextBrowseURL = nil
             return
         }
@@ -652,6 +656,10 @@ struct ContentView: View {
         preferredNextBrowseURL =
             model.browsePhotoURLs.dropFirst(activeIndex + 1).first { !removing.contains($0) }
             ?? model.browsePhotoURLs[..<activeIndex].last { !removing.contains($0) }
+        if let nextURL = preferredNextBrowseURL {
+            activeBrowseURL = nextURL
+            selectedBrowseURLs = [nextURL]
+        }
     }
 
     private func assessment(for candidate: BlurCandidate) -> String {
