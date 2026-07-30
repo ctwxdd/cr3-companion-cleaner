@@ -96,7 +96,11 @@ Browse thumbnails use tight spacing and preserve portrait/landscape aspect
 ratios. Phone pinch gestures zoom and pan only the preview image while controls
 stay fixed. The macOS **Browse Photos** tab provides the same on-demand grid,
 main preview, filmstrip, trackpad pinch zoom, keyboard navigation, Trash, and
-Undo workflow. **Choose Subfolder…** and **Up** switch within the originally
+Undo workflow. Clicking a grid or filmstrip thumbnail selects the current
+photo; Left/Right changes that selection, and Delete opens the Trash
+confirmation before automatically advancing to the next photo. Thumbnail
+checkmarks remain available for multi-select cleanup. **Choose Subfolder…**
+and **Up** switch within the originally
 authorized root without reopening access to unrelated folders.
 The server generates previews concurrently and preloads the previous/next three
 images. When a JPG is moved, only its matching CR3 locations are rechecked and

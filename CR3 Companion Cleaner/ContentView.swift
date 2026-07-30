@@ -45,6 +45,7 @@ struct ContentView: View {
     @State private var showsWebRemote = false
     @State private var selectedBrowseURLs: Set<URL> = []
     @State private var activeBrowseURL: URL?
+    @State private var preferredNextBrowseURL: URL?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -66,6 +67,7 @@ struct ContentView: View {
                 onConfirm: {
                     showsReviewTrashConfirmation = false
                     if !model.dryRun, resultMode == .blurReview { rememberNextReviewCandidate() }
+                    if !model.dryRun, resultMode == .browse { rememberNextBrowsePhoto() }
                     model.trashReviewPhotos(reviewTrashURLs)
                 }
             )
@@ -96,7 +98,14 @@ struct ContentView: View {
         .onChange(of: model.browsePhotoURLs) { urls in
             let available = Set(urls)
             selectedBrowseURLs.formIntersection(available)
-            if activeBrowseURL.map({ available.contains($0) }) != true { activeBrowseURL = urls.first }
+            if let preferredNextBrowseURL, available.contains(preferredNextBrowseURL) {
+                activeBrowseURL = preferredNextBrowseURL
+                selectedBrowseURLs = [preferredNextBrowseURL]
+                self.preferredNextBrowseURL = nil
+            } else if activeBrowseURL.map({ available.contains($0) }) != true {
+                activeBrowseURL = urls.first
+                selectedBrowseURLs = urls.first.map { [$0] } ?? []
+            }
         }
         .onChange(of: model.selectedFolder) { _ in
             undoManager?.removeAllActions(withTarget: model)
@@ -624,7 +633,22 @@ struct ContentView: View {
 
     private func requestBrowseTrash() {
         reviewTrashURLs = model.browsePhotoURLs.filter { selectedBrowseURLs.contains($0) }
+        if reviewTrashURLs.isEmpty, let activeBrowseURL {
+            reviewTrashURLs = [activeBrowseURL]
+        }
         showsReviewTrashConfirmation = !reviewTrashURLs.isEmpty
+    }
+
+    private func rememberNextBrowsePhoto() {
+        guard let activeBrowseURL,
+              let activeIndex = model.browsePhotoURLs.firstIndex(of: activeBrowseURL) else {
+            preferredNextBrowseURL = nil
+            return
+        }
+        let removing = Set(reviewTrashURLs)
+        preferredNextBrowseURL =
+            model.browsePhotoURLs.dropFirst(activeIndex + 1).first { !removing.contains($0) }
+            ?? model.browsePhotoURLs[..<activeIndex].last { !removing.contains($0) }
     }
 
     private func assessment(for candidate: BlurCandidate) -> String {
@@ -983,7 +1007,7 @@ private struct DesktopBrowseView: View {
                 Button(model.dryRun ? "Review Dry Run…" : "Move Selected to Trash…", systemImage: "trash") {
                     onTrash()
                 }
-                .disabled(selectedURLs.isEmpty || model.isBusy)
+                .disabled((selectedURLs.isEmpty && activeURL == nil) || model.isBusy)
             }
             .padding()
 
@@ -1014,7 +1038,10 @@ private struct DesktopBrowseView: View {
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 108), spacing: 4)], spacing: 4) {
                             ForEach(model.browsePhotoURLs, id: \.self) { url in
                                 ZStack(alignment: .topTrailing) {
-                                    Button { activeURL = url } label: {
+                                    Button {
+                                        activeURL = url
+                                        selectedURLs = [url]
+                                    } label: {
                                         LocalPhotoImage(url: url, maxPixel: 300)
                                             .frame(maxWidth: .infinity)
                                             .frame(height: 112)
@@ -1049,7 +1076,12 @@ private struct DesktopBrowseView: View {
                     }
                     .frame(minWidth: 260, idealWidth: 360)
 
-                    DesktopPhotoPreview(urls: model.browsePhotoURLs, activeURL: $activeURL)
+                    DesktopPhotoPreview(
+                        urls: model.browsePhotoURLs,
+                        activeURL: $activeURL,
+                        selectedURLs: $selectedURLs,
+                        onTrash: onTrash
+                    )
                         .frame(minWidth: 360)
                 }
                 .onDeleteCommand { onTrash() }
@@ -1061,6 +1093,8 @@ private struct DesktopBrowseView: View {
 private struct DesktopPhotoPreview: View {
     let urls: [URL]
     @Binding var activeURL: URL?
+    @Binding var selectedURLs: Set<URL>
+    let onTrash: () -> Void
     @State private var zoom: CGFloat = 1
     @State private var settledZoom: CGFloat = 1
     @State private var offset: CGSize = .zero
@@ -1102,7 +1136,7 @@ private struct DesktopPhotoPreview: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     LazyHStack(spacing: 4) {
                         ForEach(urls, id: \.self) { url in
-                            Button { activeURL = url } label: {
+                            Button { select(url) } label: {
                                 LocalPhotoImage(url: url, maxPixel: 180)
                                     .frame(width: 62, height: 66)
                                     .background(.black)
@@ -1131,6 +1165,7 @@ private struct DesktopPhotoPreview: View {
             if direction == .left { move(-1) }
             if direction == .right { move(1) }
         }
+        .onDeleteCommand(perform: onTrash)
         .task(id: activeURL) {
             guard let activeURL, let index = urls.firstIndex(of: activeURL) else { return }
             let nearby = (-2...2).compactMap { offset -> URL? in
@@ -1148,7 +1183,12 @@ private struct DesktopPhotoPreview: View {
     private func move(_ amount: Int) {
         guard !urls.isEmpty else { return }
         let index = activeURL.flatMap { urls.firstIndex(of: $0) } ?? 0
-        activeURL = urls[(index + amount + urls.count) % urls.count]
+        select(urls[(index + amount + urls.count) % urls.count])
+    }
+
+    private func select(_ url: URL) {
+        activeURL = url
+        selectedURLs = [url]
     }
 
     private func resetZoom() {
