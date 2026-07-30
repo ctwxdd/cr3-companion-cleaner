@@ -1061,7 +1061,7 @@ private struct DesktopPhotoPreview: View {
                 ZStack {
                     Color.black
                     if let activeURL {
-                        LocalPhotoImage(url: activeURL, maxPixel: 2_400)
+                        LocalPhotoImage(url: activeURL, maxPixel: 2_400, priority: .active)
                             .frame(width: proxy.size.width, height: proxy.size.height)
                             .scaleEffect(zoom)
                             .offset(offset)
@@ -1115,7 +1115,11 @@ private struct DesktopPhotoPreview: View {
                                 let url = urls[index]
                                 ZStack(alignment: .topTrailing) {
                                     Button { select(url) } label: {
-                                        LocalPhotoImage(url: url, maxPixel: 180)
+                                        LocalPhotoImage(
+                                            url: url,
+                                            maxPixel: 180,
+                                            priority: activeURL == url ? .active : .standard
+                                        )
                                             .frame(width: 62, height: 66)
                                             .background(.black)
                                             .overlay {
@@ -1181,7 +1185,13 @@ private struct DesktopPhotoPreview: View {
             }
             await withTaskGroup(of: Void.self) { group in
                 for url in nearby {
-                    group.addTask { _ = await ImageThumbnailCache.shared.image(for: url, maxPixel: 2_400) }
+                    group.addTask {
+                        _ = await ImageThumbnailCache.shared.image(
+                            for: url,
+                            maxPixel: 2_400,
+                            priority: .nearby
+                        )
+                    }
                 }
             }
         }
@@ -1227,6 +1237,7 @@ private struct DesktopPhotoPreview: View {
 private struct LocalPhotoImage: View {
     let url: URL
     let maxPixel: Int
+    var priority: ThumbnailRequestPriority = .standard
     @State private var image: NSImage?
 
     var body: some View {
@@ -1237,8 +1248,12 @@ private struct LocalPhotoImage: View {
                 ProgressView().controlSize(.small)
             }
         }
-        .task(id: url.path + "|\(maxPixel)") {
-            let cgImage = await ImageThumbnailCache.shared.image(for: url, maxPixel: maxPixel)
+        .task(id: url.path + "|\(maxPixel)|\(priority.rawValue)") {
+            let cgImage = await ImageThumbnailCache.shared.image(
+                for: url,
+                maxPixel: maxPixel,
+                priority: priority
+            )
             guard !Task.isCancelled, let cgImage else { return }
             image = NSImage(cgImage: cgImage, size: .zero)
         }

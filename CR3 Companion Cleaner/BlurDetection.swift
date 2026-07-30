@@ -9,6 +9,32 @@ private final class CachedThumbnail: NSObject, @unchecked Sendable {
     init(_ image: CGImage) { self.image = image }
 }
 
+enum ThumbnailRequestPriority: Int, Sendable {
+    case standard
+    case nearby
+    case active
+
+    var queuePriority: Operation.QueuePriority {
+        switch self {
+        case .standard: .normal
+        case .nearby: .high
+        case .active: .veryHigh
+        }
+    }
+}
+
+private final class PendingThumbnailRequest: @unchecked Sendable {
+    let task: Task<CGImage?, Never>
+    let operation: BlockOperation
+    var priority: ThumbnailRequestPriority
+
+    init(task: Task<CGImage?, Never>, operation: BlockOperation, priority: ThumbnailRequestPriority) {
+        self.task = task
+        self.operation = operation
+        self.priority = priority
+    }
+}
+
 /// Coalesces duplicate decodes from the grid, main preview, and AI analyzers.
 /// The bounded native queue prevents a fast scroll from creating an I/O storm.
 actor ImageThumbnailCache {
@@ -25,7 +51,7 @@ actor ImageThumbnailCache {
     }()
 
     private let cache = NSCache<NSString, CachedThumbnail>()
-    private var pending: [String: Task<CGImage?, Never>] = [:]
+    private var pending: [String: PendingThumbnailRequest] = [:]
 
     init() {
         let memory = ProcessInfo.processInfo.physicalMemory
@@ -35,15 +61,27 @@ actor ImageThumbnailCache {
         cache.countLimit = 600
     }
 
-    func image(for url: URL, maxPixel: Int) async -> CGImage? {
+    func image(
+        for url: URL,
+        maxPixel: Int,
+        priority: ThumbnailRequestPriority = .standard
+    ) async -> CGImage? {
         let values = try? url.resourceValues(forKeys: [.fileSizeKey, .contentModificationDateKey])
         let key = "\(url.standardizedFileURL.path)|\(values?.fileSize ?? 0)|\(values?.contentModificationDate?.timeIntervalSinceReferenceDate ?? 0)|\(maxPixel)"
         if let cached = cache.object(forKey: key as NSString) { return cached.image }
-        if let task = pending[key] { return await task.value }
+        if let request = pending[key] {
+            if priority.rawValue > request.priority.rawValue {
+                request.priority = priority
+                request.operation.queuePriority = priority.queuePriority
+            }
+            return await request.task.value
+        }
 
+        let operation = BlockOperation()
+        operation.queuePriority = priority.queuePriority
         let task = Task.detached(priority: .utility) { () -> CGImage? in
             await withCheckedContinuation { continuation in
-                Self.decodeQueue.addOperation {
+                operation.addExecutionBlock {
                     guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else {
                         continuation.resume(returning: nil)
                         return
@@ -56,9 +94,10 @@ actor ImageThumbnailCache {
                     ] as CFDictionary)
                     continuation.resume(returning: image)
                 }
+                Self.decodeQueue.addOperation(operation)
             }
         }
-        pending[key] = task
+        pending[key] = PendingThumbnailRequest(task: task, operation: operation, priority: priority)
         let image = await task.value
         pending[key] = nil
         if let image {

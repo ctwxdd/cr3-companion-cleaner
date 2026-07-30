@@ -176,6 +176,10 @@ or cancellation and does not block lid-close or manually requested sleep.
 JPG thumbnail decoding is shared by the macOS grid, main preview, and local AI
 analysis. Duplicate requests are coalesced, decoded images are held in a bounded
 memory cache, and the current photo preloads the two neighbors on each side.
+The native decode queue prioritizes the active photo above nearby preloads and
+ordinary filmstrip/analysis work. Jumping far through a large filmstrip
+therefore promotes the new photo—even when the same decode was already
+queued—instead of waiting behind thumbnails from the abandoned position.
 Both macOS and Web Remote image queues adapt to the machine but stay capped at
 four concurrent decodes (two in Low Power Mode or under thermal pressure). The
 phone preloads only four nearby full previews instead of issuing redundant
