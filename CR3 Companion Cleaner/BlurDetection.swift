@@ -694,6 +694,117 @@ enum PhotoMetadata {
         return (try? url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate)
             ?? .distantPast
     }
+
+    static func details(for url: URL) -> PhotoEXIFMetadata {
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
+              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any] else {
+            return .init(rows: [])
+        }
+        let exif = properties[kCGImagePropertyExifDictionary] as? [CFString: Any] ?? [:]
+        let tiff = properties[kCGImagePropertyTIFFDictionary] as? [CFString: Any] ?? [:]
+        let auxiliary = properties[kCGImagePropertyExifAuxDictionary] as? [CFString: Any] ?? [:]
+        var rows: [PhotoMetadataRow] = []
+
+        let camera = [
+            tiff[kCGImagePropertyTIFFMake] as? String,
+            tiff[kCGImagePropertyTIFFModel] as? String
+        ].compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+        if !camera.isEmpty { rows.append(.init(label: "Camera", value: camera)) }
+        if let lens = auxiliary[kCGImagePropertyExifAuxLensModel] as? String, !lens.isEmpty {
+            rows.append(.init(label: "Lens", value: lens))
+        }
+        if let exposure = number(in: exif, key: kCGImagePropertyExifExposureTime), exposure > 0 {
+            rows.append(.init(label: "Shutter", value: formatExposureTime(exposure)))
+        }
+        if let aperture = number(in: exif, key: kCGImagePropertyExifFNumber), aperture > 0 {
+            rows.append(.init(label: "Aperture", value: String(format: "f/%.1f", aperture)))
+        }
+        if let iso = number(in: exif, key: kCGImagePropertyExifISOSpeedRatings) {
+            rows.append(.init(label: "ISO", value: String(Int(iso.rounded()))))
+        }
+        if let focalLength = number(in: exif, key: kCGImagePropertyExifFocalLength) {
+            rows.append(.init(label: "Focal Length", value: String(format: "%.0f mm", focalLength)))
+        }
+        if let bias = number(in: exif, key: kCGImagePropertyExifExposureBiasValue) {
+            rows.append(.init(label: "Exposure Bias", value: String(format: "%+.1f EV", bias)))
+        }
+        if let metering = number(in: exif, key: kCGImagePropertyExifMeteringMode) {
+            rows.append(.init(label: "Metering", value: meteringMode(Int(metering))))
+        }
+        if let whiteBalance = number(in: exif, key: kCGImagePropertyExifWhiteBalance) {
+            rows.append(.init(label: "White Balance", value: whiteBalance == 0 ? "Auto" : "Manual"))
+        }
+        if let flash = number(in: exif, key: kCGImagePropertyExifFlash) {
+            rows.append(.init(label: "Flash", value: Int(flash) & 1 == 1 ? "Fired" : "Did not fire"))
+        }
+        if let date = exif[kCGImagePropertyExifDateTimeOriginal] as? String {
+            rows.append(.init(label: "Captured", value: date))
+        }
+        if let width = number(in: properties, key: kCGImagePropertyPixelWidth),
+           let height = number(in: properties, key: kCGImagePropertyPixelHeight) {
+            rows.append(.init(label: "Dimensions", value: "\(Int(width)) × \(Int(height))"))
+        }
+        return .init(rows: rows)
+    }
+
+    static func formatExposureTime(_ seconds: Double) -> String {
+        if seconds >= 0.5 { return String(format: seconds >= 10 ? "%.0f s" : "%.1f s", seconds) }
+        return "1/\(max(1, Int((1 / seconds).rounded()))) s"
+    }
+
+    private static func number(in dictionary: [CFString: Any], key: CFString) -> Double? {
+        if let number = dictionary[key] as? NSNumber { return number.doubleValue }
+        if let numbers = dictionary[key] as? [NSNumber] { return numbers.first?.doubleValue }
+        return nil
+    }
+
+    private static func meteringMode(_ value: Int) -> String {
+        switch value {
+        case 1: "Average"
+        case 2: "Center-weighted"
+        case 3: "Spot"
+        case 5: "Pattern"
+        case 6: "Partial"
+        default: "Mode \(value)"
+        }
+    }
+}
+
+struct PhotoMetadataRow: Identifiable, Sendable {
+    let label: String
+    let value: String
+    var id: String { label }
+}
+
+struct PhotoEXIFMetadata: Sendable {
+    let rows: [PhotoMetadataRow]
+}
+
+private final class CachedEXIFMetadata: NSObject, @unchecked Sendable {
+    let metadata: PhotoEXIFMetadata
+    init(_ metadata: PhotoEXIFMetadata) { self.metadata = metadata }
+}
+
+actor PhotoEXIFMetadataCache {
+    static let shared = PhotoEXIFMetadataCache()
+    private let cache = NSCache<NSString, CachedEXIFMetadata>()
+
+    init() {
+        cache.countLimit = 200
+    }
+
+    func metadata(for url: URL) async -> PhotoEXIFMetadata {
+        let values = try? url.resourceValues(forKeys: [.fileSizeKey, .contentModificationDateKey])
+        let key = "\(url.standardizedFileURL.path)|\(values?.fileSize ?? 0)|\(values?.contentModificationDate?.timeIntervalSinceReferenceDate ?? 0)"
+        if let cached = cache.object(forKey: key as NSString) { return cached.metadata }
+        let metadata = await Task.detached(priority: .userInitiated) {
+            PhotoMetadata.details(for: url)
+        }.value
+        cache.setObject(CachedEXIFMetadata(metadata), forKey: key as NSString)
+        return metadata
+    }
 }
 
 enum ExactDuplicateDetector {

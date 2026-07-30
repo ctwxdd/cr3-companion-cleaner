@@ -1056,6 +1056,7 @@ private struct DesktopPhotoPreview: View {
     @State private var settledOffset: CGSize = .zero
     @State private var scrubIndex = 0.0
     @State private var isScrubbing = false
+    @State private var showsEXIF = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -1087,6 +1088,29 @@ private struct DesktopPhotoPreview: View {
                     }
                     .onEnded { _ in settledOffset = offset })
                 .onTapGesture(count: 2, perform: toggleZoom)
+                .overlay(alignment: .trailing) {
+                    HStack(spacing: 8) {
+                        Button {
+                            withAnimation(.easeOut(duration: 0.16)) { showsEXIF.toggle() }
+                        } label: {
+                            Image(systemName: showsEXIF ? "chevron.right" : "info.circle.fill")
+                                .font(.title3)
+                                .frame(width: 30, height: 44)
+                        }
+                        .buttonStyle(.plain)
+                        .background(.ultraThinMaterial, in: Capsule())
+                        .keyboardShortcut("i", modifiers: [])
+                        .help(showsEXIF ? "Hide photo information" : "Show photo information")
+
+                        if showsEXIF, let activeURL {
+                            PhotoEXIFPanel(url: activeURL)
+                                .frame(width: 290)
+                                .transition(.move(edge: .trailing).combined(with: .opacity))
+                        }
+                    }
+                    .padding(.vertical, 10)
+                    .padding(.trailing, 8)
+                }
             }
 
             ScrollViewReader { reader in
@@ -1264,6 +1288,69 @@ private struct DesktopPhotoPreview: View {
         settledZoom = 1
         offset = .zero
         settledOffset = .zero
+    }
+}
+
+private struct PhotoEXIFPanel: View {
+    let url: URL
+    @State private var metadata: PhotoEXIFMetadata?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 3) {
+                Label("Photo Information", systemImage: "camera.aperture")
+                    .font(.headline)
+                Text(url.lastPathComponent)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+            Divider()
+            if let metadata {
+                if metadata.rows.isEmpty {
+                    Text("No EXIF shooting parameters found.")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                } else {
+                    ScrollView {
+                        LazyVStack(spacing: 8) {
+                            ForEach(metadata.rows) { row in
+                                HStack(alignment: .firstTextBaseline) {
+                                    Text(row.label)
+                                        .foregroundStyle(.secondary)
+                                    Spacer(minLength: 12)
+                                    Text(row.value)
+                                        .multilineTextAlignment(.trailing)
+                                        .textSelection(.enabled)
+                                }
+                                .font(.callout)
+                            }
+                        }
+                    }
+                }
+            } else {
+                HStack {
+                    ProgressView().controlSize(.small)
+                    Text("Reading EXIF…").foregroundStyle(.secondary)
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(14)
+        .frame(maxHeight: .infinity, alignment: .top)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14))
+        .overlay {
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(.white.opacity(0.16))
+        }
+        .shadow(color: .black.opacity(0.25), radius: 12)
+        .task(id: url) {
+            metadata = nil
+            let loaded = await PhotoEXIFMetadataCache.shared.metadata(for: url)
+            guard !Task.isCancelled else { return }
+            metadata = loaded
+        }
     }
 }
 

@@ -111,6 +111,11 @@ Desktop zoom follows the trackpad directly and uses a short, non-bouncing
 ease-out only for Space/double-click transitions. A native key-down monitor
 handles Left/Right auto-repeat immediately instead of waiting for SwiftUI
 focus controls to release the key.
+The right-edge **Photo Information** drawer (or the `I` key) shows the current
+photo's camera, lens, shutter, aperture, ISO, focal length, exposure bias,
+metering, white balance, flash, capture time, and dimensions. EXIF is read
+only while the drawer is open and retained in a bounded 200-entry memory
+cache keyed by file size and modification time; it never creates a disk cache.
 The server generates previews concurrently and preloads the previous/next three
 images. When a JPG is moved, only its matching CR3 locations are rechecked and
 new RAW orphans appear immediately without a full scan.
