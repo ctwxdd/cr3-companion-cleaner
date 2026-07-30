@@ -97,12 +97,13 @@ ratios. Phone pinch gestures zoom and pan only the preview image while controls
 stay fixed. Swiping between nearby photos preserves the zoom level and pan
 position for expression comparison; double-tapping a zoomed photo returns to
 the full-image view. The filmstrip follows completed Trash operations without
-requiring a page reload. The macOS **Browse Photos** tab provides the same on-demand grid,
+requiring a page reload. The macOS **Browse Photos** tab provides an on-demand
 main preview, filmstrip, trackpad pinch zoom, keyboard navigation, Trash, and
-Undo workflow. Clicking a grid or filmstrip thumbnail selects the current
-photo; Left/Right changes that selection, and Delete opens the Trash
-confirmation before automatically advancing to the next photo. Thumbnail
-checkmarks remain available for multi-select cleanup. **Choose Subfolder…**
+Undo workflow. The full-width desktop viewer keeps selection checkmarks and
+the current sequence number directly in its bottom filmstrip instead of
+duplicating thumbnails in a sidebar. Left/Right preserves zoom and pan for
+comparison, Space toggles Fit/2×, and Delete opens the Trash confirmation
+before automatically advancing to the next photo. **Choose Subfolder…**
 and **Up** switch within the originally
 authorized root without reopening access to unrelated folders.
 The server generates previews concurrently and preloads the previous/next three

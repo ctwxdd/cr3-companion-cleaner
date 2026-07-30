@@ -1033,57 +1033,12 @@ private struct DesktopBrowseView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                HSplitView {
-                    ScrollView {
-                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 108), spacing: 4)], spacing: 4) {
-                            ForEach(model.browsePhotoURLs, id: \.self) { url in
-                                ZStack(alignment: .topTrailing) {
-                                    Button {
-                                        activeURL = url
-                                        selectedURLs = [url]
-                                    } label: {
-                                        LocalPhotoImage(url: url, maxPixel: 300)
-                                            .frame(maxWidth: .infinity)
-                                            .frame(height: 112)
-                                            .background(.black)
-                                            .overlay {
-                                                RoundedRectangle(cornerRadius: 3)
-                                                    .stroke(activeURL == url ? Color.accentColor : .clear, lineWidth: 3)
-                                            }
-                                    }
-                                    .buttonStyle(.plain)
-                                    Button {
-                                        if selectedURLs.contains(url) { selectedURLs.remove(url) }
-                                        else { selectedURLs.insert(url) }
-                                        activeURL = url
-                                    } label: {
-                                        Image(systemName: selectedURLs.contains(url) ? "checkmark.circle.fill" : "circle")
-                                            .font(.title3)
-                                            .symbolRenderingMode(.palette)
-                                            .foregroundStyle(.white, Color.accentColor)
-                                            .shadow(radius: 2)
-                                    }
-                                    .buttonStyle(.plain)
-                                    .padding(6)
-                                }
-                                .contextMenu {
-                                    Button("Select") { selectedURLs.insert(url); activeURL = url }
-                                    Button("Reveal in Finder") { NSWorkspace.shared.activateFileViewerSelecting([url]) }
-                                }
-                            }
-                        }
-                        .padding(4)
-                    }
-                    .frame(minWidth: 260, idealWidth: 360)
-
-                    DesktopPhotoPreview(
-                        urls: model.browsePhotoURLs,
-                        activeURL: $activeURL,
-                        selectedURLs: $selectedURLs,
-                        onTrash: onTrash
-                    )
-                        .frame(minWidth: 360)
-                }
+                DesktopPhotoPreview(
+                    urls: model.browsePhotoURLs,
+                    activeURL: $activeURL,
+                    selectedURLs: $selectedURLs,
+                    onTrash: onTrash
+                )
                 .onDeleteCommand { onTrash() }
             }
         }
@@ -1130,32 +1085,84 @@ private struct DesktopPhotoPreview: View {
                         )
                     }
                     .onEnded { _ in settledOffset = offset })
+                .onTapGesture(count: 2, perform: toggleZoom)
             }
 
             ScrollViewReader { reader in
-                ScrollView(.horizontal, showsIndicators: false) {
-                    LazyHStack(spacing: 4) {
-                        ForEach(urls, id: \.self) { url in
-                            Button { select(url) } label: {
-                                LocalPhotoImage(url: url, maxPixel: 180)
-                                    .frame(width: 62, height: 66)
-                                    .background(.black)
-                                    .overlay {
-                                        RoundedRectangle(cornerRadius: 3)
-                                            .stroke(activeURL == url ? Color.white : .clear, lineWidth: 2)
-                                    }
-                            }
-                            .buttonStyle(.plain)
-                            .id(url)
+                VStack(spacing: 0) {
+                    HStack {
+                        if let index = activeURL.flatMap({ urls.firstIndex(of: $0) }) {
+                            Text("\(index + 1) of \(urls.count)")
+                                .font(.caption.monospacedDigit())
+                                .foregroundStyle(.secondary)
                         }
+                        Spacer()
+                        Text("\(selectedURLs.count) selected")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Button(zoom > 1 ? "Fit" : "Zoom 2×", systemImage: "magnifyingglass") {
+                            toggleZoom()
+                        }
+                        .keyboardShortcut(.space, modifiers: [])
+                        .help("Press Space to toggle zoom")
                     }
                     .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .frame(height: 28)
+
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        LazyHStack(spacing: 4) {
+                            ForEach(urls.indices, id: \.self) { index in
+                                let url = urls[index]
+                                ZStack(alignment: .topTrailing) {
+                                    Button { select(url) } label: {
+                                        LocalPhotoImage(url: url, maxPixel: 180)
+                                            .frame(width: 62, height: 66)
+                                            .background(.black)
+                                            .overlay {
+                                                RoundedRectangle(cornerRadius: 3)
+                                                    .stroke(activeURL == url ? Color.white : .clear, lineWidth: 2)
+                                            }
+                                    }
+                                    .buttonStyle(.plain)
+
+                                    Button { toggleSelection(url) } label: {
+                                        Image(systemName: selectedURLs.contains(url) ? "checkmark.circle.fill" : "circle")
+                                            .symbolRenderingMode(.palette)
+                                            .foregroundStyle(.white, Color.accentColor)
+                                            .shadow(radius: 2)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .padding(3)
+
+                                    if activeURL == url {
+                                        Text("#\(index + 1)")
+                                            .font(.caption2.monospacedDigit().bold())
+                                            .padding(.horizontal, 4)
+                                            .padding(.vertical, 2)
+                                            .background(.black.opacity(0.75), in: Capsule())
+                                            .padding(3)
+                                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                                            .allowsHitTesting(false)
+                                    }
+                                }
+                                .contextMenu {
+                                    Button(selectedURLs.contains(url) ? "Deselect" : "Select") {
+                                        toggleSelection(url)
+                                    }
+                                    Button("Reveal in Finder") {
+                                        NSWorkspace.shared.activateFileViewerSelecting([url])
+                                    }
+                                }
+                                .id(url)
+                            }
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                    }
+                    .frame(height: 76)
                 }
-                .frame(height: 76)
                 .background(Color(nsColor: .controlBackgroundColor))
                 .onChange(of: activeURL) { url in
-                    resetZoom()
                     if let url { withAnimation(.easeOut(duration: 0.16)) { reader.scrollTo(url, anchor: .center) } }
                 }
             }
@@ -1189,6 +1196,24 @@ private struct DesktopPhotoPreview: View {
     private func select(_ url: URL) {
         activeURL = url
         selectedURLs = [url]
+    }
+
+    private func toggleSelection(_ url: URL) {
+        if selectedURLs.contains(url) {
+            selectedURLs.remove(url)
+        } else {
+            selectedURLs.insert(url)
+        }
+        activeURL = url
+    }
+
+    private func toggleZoom() {
+        if zoom > 1.01 {
+            resetZoom()
+        } else {
+            zoom = 2
+            settledZoom = 2
+        }
     }
 
     private func resetZoom() {
