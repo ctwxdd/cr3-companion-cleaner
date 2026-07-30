@@ -1067,7 +1067,6 @@ private struct DesktopPhotoPreview: View {
                             .frame(width: proxy.size.width, height: proxy.size.height)
                             .scaleEffect(zoom)
                             .offset(offset)
-                            .animation(.interactiveSpring(response: 0.18, dampingFraction: 0.9), value: zoom)
                     }
                 }
                 .clipped()
