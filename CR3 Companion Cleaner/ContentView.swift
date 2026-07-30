@@ -1111,7 +1111,6 @@ private struct DesktopPhotoPreview: View {
                         Button(zoom > 1 ? "Fit" : "Zoom 2×", systemImage: "magnifyingglass") {
                             toggleZoom()
                         }
-                        .keyboardShortcut(.space, modifiers: [])
                         .help("Press Space to toggle zoom")
                     }
                     .padding(.horizontal, 8)
@@ -1177,17 +1176,18 @@ private struct DesktopPhotoPreview: View {
                 .onChange(of: activeURL) { url in
                     guard let url, let index = urls.firstIndex(of: url) else { return }
                     if !isScrubbing { scrubIndex = Double(index) }
-                    withAnimation(.easeOut(duration: 0.16)) { reader.scrollTo(url, anchor: .center) }
+                    reader.scrollTo(url, anchor: .center)
                 }
                 .onChange(of: urls.count) { _ in syncScrubber() }
                 .onAppear(perform: syncScrubber)
             }
         }
         .focusable()
-        .onMoveCommand { direction in
-            if direction == .left { move(-1) }
-            if direction == .right { move(1) }
-        }
+        .background(DesktopBrowseKeyMonitor(
+            onLeft: { move(-1) },
+            onRight: { move(1) },
+            onSpace: toggleZoom
+        ))
         .onDeleteCommand(perform: onTrash)
         .task(id: activeURL) {
             guard let activeURL, let index = urls.firstIndex(of: activeURL) else { return }
@@ -1249,11 +1249,13 @@ private struct DesktopPhotoPreview: View {
     }
 
     private func toggleZoom() {
-        if zoom > 1.01 {
-            resetZoom()
-        } else {
-            zoom = 2
-            settledZoom = 2
+        withAnimation(.easeOut(duration: 0.12)) {
+            if zoom > 1.01 {
+                resetZoom()
+            } else {
+                zoom = 2
+                settledZoom = 2
+            }
         }
     }
 
@@ -1262,6 +1264,59 @@ private struct DesktopPhotoPreview: View {
         settledZoom = 1
         offset = .zero
         settledOffset = .zero
+    }
+}
+
+private struct DesktopBrowseKeyMonitor: NSViewRepresentable {
+    let onLeft: () -> Void
+    let onRight: () -> Void
+    let onSpace: () -> Void
+
+    func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView(frame: .zero)
+        context.coordinator.install(for: view)
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        context.coordinator.parent = self
+    }
+
+    final class Coordinator {
+        var parent: DesktopBrowseKeyMonitor
+        private weak var view: NSView?
+        private var monitor: Any?
+
+        init(parent: DesktopBrowseKeyMonitor) {
+            self.parent = parent
+        }
+
+        func install(for view: NSView) {
+            self.view = view
+            monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+                guard let self,
+                      let window = self.view?.window,
+                      event.window === window,
+                      window.isKeyWindow,
+                      event.modifierFlags.intersection([.command, .control, .option]).isEmpty else {
+                    return event
+                }
+                switch event.keyCode {
+                case 123: self.parent.onLeft()
+                case 124: self.parent.onRight()
+                case 49:
+                    if !event.isARepeat { self.parent.onSpace() }
+                default: return event
+                }
+                return nil
+            }
+        }
+
+        deinit {
+            if let monitor { NSEvent.removeMonitor(monitor) }
+        }
     }
 }
 

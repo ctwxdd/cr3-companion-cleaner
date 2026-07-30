@@ -107,6 +107,10 @@ libraries without decoding every photo passed while dragging. Delete opens the T
 before automatically advancing to the next photo. **Choose Subfolder…**
 and **Up** switch within the originally
 authorized root without reopening access to unrelated folders.
+Desktop zoom follows the trackpad directly and uses a short, non-bouncing
+ease-out only for Space/double-click transitions. A native key-down monitor
+handles Left/Right auto-repeat immediately instead of waiting for SwiftUI
+focus controls to release the key.
 The server generates previews concurrently and preloads the previous/next three
 images. When a JPG is moved, only its matching CR3 locations are rechecked and
 new RAW orphans appear immediately without a full scan.
